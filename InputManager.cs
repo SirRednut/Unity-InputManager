@@ -41,10 +41,17 @@ public class InputManager : MonoBehaviour {
 [System.SerializableAttribute]
 public class InputData{
 	
+	[TooltipAttribute("A name so the list displays the name instead of 'Element #'")]
 	public string InputName;
 
-	public KeyCode Key1;
-	public KeyCode Key2;
-	public UnityEvent[] events;
+	[TextAreaAttribute]
+	public string Description;
 
+	[TooltipAttribute("Select what keycodes to use for this input")]
+	public KeyCode Key1;
+	[TooltipAttribute("Select what keycodes to use for this input")]
+	public KeyCode Key2;
+
+	[TooltipAttribute("Function Calls Are Done Here")]
+	public UnityEvent[] events;
 }
