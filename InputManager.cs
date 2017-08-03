@@ -6,13 +6,19 @@ using UnityEngine.Events;
 
 
 public class InputManager : MonoBehaviour {
-	
-	//Uncomment this if not wanting an extra list in inspector
-	/*public InputData 	ipt_Forwards, ipt_Backwards, ipt_Left, ipt_Right,
+
+    //Uncomment this if not wanting an extra list in inspector
+    /*public InputData 	ipt_Forwards, ipt_Backwards, ipt_Left, ipt_Right,
 						ipt_Escape, ipt_jump, ipt_sprint, ipt_interact,
 						ipt_inventory, ipt_click;*/
 
-	public List<InputData> inputList; // Comment out this line if not wanting an extra list in inspector
+    [SerializeField]
+    [Tooltip("Disable this manager when cursor is enabled")]
+    private bool CursorLocked = false;
+    private bool canInput = true;
+
+    [SerializeField]
+	private List<InputData> inputList;
 
 	void Start () {
 		//Uncomment this if not wanting an extra list in inspector
@@ -25,39 +31,50 @@ public class InputManager : MonoBehaviour {
 	
 	void Update ()
 	{
-		//Check every input and every function run
-		foreach(InputData ipt in inputList)
-		{
-			if (ipt.HoldEvents.Length > 0)
-			{
-				if (Input.GetKey(ipt.Key1) || Input.GetKey(ipt.Key2))
-					foreach (UnityEvent iptEvent in ipt.HoldEvents)
-					{
-						iptEvent.Invoke();
-					}
-			}
+        if (CursorLocked && Cursor.lockState != CursorLockMode.Locked)
+        {
+            canInput = false;
+        }
+        else
+        {
+            canInput = true;
+        }
 
-			if (ipt.TapEvents.Length > 0)
-			{
-				if (Input.GetKeyDown(ipt.Key1) || Input.GetKeyDown(ipt.Key2))
-					foreach (UnityEvent iptEvent in ipt.TapEvents)
-					{
-						iptEvent.Invoke();
-					}
-			}
+        if (canInput)
+        {
+            //Check every input and every function run
+            foreach (InputData ipt in inputList)
+            {
+                if (ipt.HoldEvents.Length > 0)
+                {
+                    if (Input.GetKey(ipt.Key1) || Input.GetKey(ipt.Key2))
+                        foreach (UnityEvent iptEvent in ipt.HoldEvents)
+                        {
+                            iptEvent.Invoke();
+                        }
+                }
 
+                if (ipt.TapEvents.Length > 0)
+                {
+                    if (Input.GetKeyDown(ipt.Key1) || Input.GetKeyDown(ipt.Key2))
+                        foreach (UnityEvent iptEvent in ipt.TapEvents)
+                        {
+                            iptEvent.Invoke();
+                        }
+                }
 
-			if (ipt.ReleaseEvents.Length > 0)
-			{
-				if (Input.GetKeyUp(ipt.Key1) || Input.GetKeyUp(ipt.Key2))
-					foreach (UnityEvent iptEvent in ipt.ReleaseEvents)
-					{
-						iptEvent.Invoke();
-					}
-			}
-		}
+                if (ipt.ReleaseEvents.Length > 0)
+                {
+                    if (Input.GetKeyUp(ipt.Key1) || Input.GetKeyUp(ipt.Key2))
+                        foreach (UnityEvent iptEvent in ipt.ReleaseEvents)
+                        {
+                            iptEvent.Invoke();
+                        }
+                }
+            }
+        }
 
-	}
+    }
 }
 
 [System.SerializableAttribute]
@@ -82,4 +99,5 @@ public class InputData{
 
 	[TooltipAttribute("Function Calls Are Done Here When Button Is Released")]
 	public UnityEvent[] ReleaseEvents;
+
 }
