@@ -75,29 +75,84 @@ public class InputManager : MonoBehaviour {
         }
 
     }
+
+    public void ExternalEventCalls(string[] eventNames)
+    {
+        foreach (InputData ipt in inputList)
+        {
+            foreach (string eventName in eventNames)
+            {
+                if (ipt.InputName == eventName)
+                {
+                    foreach (UnityEvent iptEvent in ipt.HoldEvents)
+                    {
+                        iptEvent.Invoke();
+                    }
+
+                    foreach (UnityEvent iptEvent in ipt.TapEvents)
+                    {
+                        iptEvent.Invoke();
+                    }
+
+                    foreach (UnityEvent iptEvent in ipt.ReleaseEvents)
+                    {
+                        iptEvent.Invoke();
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    public void ExternalEventCalls(string eventName)
+    {
+        foreach (InputData ipt in inputList)
+        {
+            if (ipt.InputName == eventName)
+            {
+                foreach (UnityEvent iptEvent in ipt.HoldEvents)
+                {
+                    iptEvent.Invoke();
+                }
+
+                foreach (UnityEvent iptEvent in ipt.TapEvents)
+                {
+                    iptEvent.Invoke();
+                }
+
+                foreach (UnityEvent iptEvent in ipt.ReleaseEvents)
+                {
+                    iptEvent.Invoke();
+                }
+
+                return;
+            }
+        }
+    }
 }
 
-[System.SerializableAttribute]
+[System.Serializable]
 public class InputData{
 	
-	[TooltipAttribute("A name so the list displays the name instead of 'Element #'")]
+	[Tooltip("A name so the list displays the name instead of 'Element #'")]
 	public string InputName;
 
-	[TextAreaAttribute]
+	[TextArea]
 	public string Description;
 
-	[TooltipAttribute("Select what keycodes to use for this input")]
+	[Tooltip("Select what keycodes to use for this input")]
 	public KeyCode Key1;
-	[TooltipAttribute("Select what keycodes to use for this input")]
+	[Tooltip("Select what keycodes to use for this input")]
 	public KeyCode Key2;
 
-	[TooltipAttribute("Function Calls Are Done Here When Button Is Held")]
+	[Tooltip("Function Calls Are Done Here When Button Is Held")]
 	public UnityEvent[] HoldEvents;
 
-	[TooltipAttribute("Function Calls Are Done Here When Button Is Pressed Once")]
+	[Tooltip("Function Calls Are Done Here When Button Is Pressed Once")]
 	public UnityEvent[] TapEvents;
 
-	[TooltipAttribute("Function Calls Are Done Here When Button Is Released")]
+	[Tooltip("Function Calls Are Done Here When Button Is Released")]
 	public UnityEvent[] ReleaseEvents;
 
 }
