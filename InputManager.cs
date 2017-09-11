@@ -5,12 +5,8 @@ using UnityEngine;
 using UnityEngine.Events;
 
 
-public class InputManager : MonoBehaviour {
-
-    //Uncomment this if not wanting an extra list in inspector
-    /*public InputData 	ipt_Forwards, ipt_Backwards, ipt_Left, ipt_Right,
-						ipt_Escape, ipt_jump, ipt_sprint, ipt_interact,
-						ipt_inventory, ipt_click;*/
+public class InputManager : MonoBehaviour
+{
 
     [SerializeField]
     [Tooltip("Disable this manager when cursor is enabled")]
@@ -18,62 +14,57 @@ public class InputManager : MonoBehaviour {
     private bool canInput = true;
 
     [SerializeField]
-	private List<InputData> inputList;
+    private List<InputData> inputList;
 
-	void Start () {
-		//Uncomment this if not wanting an extra list in inspector
-		/*inputList = new List<InputData>{
-											ipt_Forwards, ipt_Backwards, ipt_Left, ipt_Right,
-											ipt_Escape, ipt_jump, ipt_sprint, ipt_interact,
-											ipt_inventory, ipt_click
-										};*/
-	}
-	
-	void Update ()
-	{
+    void Update()
+    {
         if (CursorLocked && Cursor.lockState != CursorLockMode.Locked)
-        {
             canInput = false;
-        }
         else
-        {
             canInput = true;
-        }
 
         if (canInput)
         {
             //Check every input and every function run
             foreach (InputData ipt in inputList)
             {
-                if (ipt.HoldEvents.Length > 0)
-                {
-                    if (Input.GetKey(ipt.Key1) || Input.GetKey(ipt.Key2))
-                        foreach (UnityEvent iptEvent in ipt.HoldEvents)
-                        {
-                            iptEvent.Invoke();
-                        }
-                }
+                if (Input.GetKey(ipt.standardInputs.Key1) || Input.GetKey(ipt.standardInputs.Key2))
+                    ipt.standardInputs.HoldEvents.Invoke();
 
-                if (ipt.TapEvents.Length > 0)
-                {
-                    if (Input.GetKeyDown(ipt.Key1) || Input.GetKeyDown(ipt.Key2))
-                        foreach (UnityEvent iptEvent in ipt.TapEvents)
-                        {
-                            iptEvent.Invoke();
-                        }
-                }
+                if (Input.GetKeyDown(ipt.standardInputs.Key1) || Input.GetKeyDown(ipt.standardInputs.Key2))
+                    ipt.standardInputs.TapEvents.Invoke();
 
-                if (ipt.ReleaseEvents.Length > 0)
+                if (Input.GetKeyUp(ipt.standardInputs.Key1) || Input.GetKeyUp(ipt.standardInputs.Key2))
+                    ipt.standardInputs.ReleaseEvents.Invoke();
+
+
+
+                if (ipt.axisInputs.axisName != "")
                 {
-                    if (Input.GetKeyUp(ipt.Key1) || Input.GetKeyUp(ipt.Key2))
-                        foreach (UnityEvent iptEvent in ipt.ReleaseEvents)
+                    for (int i = 0; i < ipt.axisInputs.AxisEvent.GetPersistentEventCount(); i++)
+                    {
+                        string type = ipt.axisInputs.AxisEvent.GetPersistentTarget(i).GetType().ToString();
+
+                        if (ipt.axisInputs.isRaw)
                         {
-                            iptEvent.Invoke();
+                            GameObject.Find(ipt.axisInputs.AxisEvent.GetPersistentTarget(i).name)
+                                        .GetComponent(type)
+                                        .SendMessage(ipt.axisInputs.AxisEvent.GetPersistentMethodName(i), Input.GetAxisRaw(ipt.axisInputs.axisName));
                         }
+                        else
+                        {
+                            GameObject.Find(ipt.axisInputs.AxisEvent.GetPersistentTarget(i).name)
+                                        .GetComponent(type)
+                                        .SendMessage(ipt.axisInputs.AxisEvent.GetPersistentMethodName(i), Input.GetAxis(ipt.axisInputs.axisName));
+                        }
+                    }
+                }
+                else if (ipt.axisInputs.AxisEvent.GetPersistentEventCount() > 0)
+                {
+                    Debug.LogError("Axis Must Have A Name");
                 }
             }
         }
-
     }
 
     public void ExternalEventCalls(string[] eventNames)
@@ -84,20 +75,9 @@ public class InputManager : MonoBehaviour {
             {
                 if (ipt.InputName == eventName)
                 {
-                    foreach (UnityEvent iptEvent in ipt.HoldEvents)
-                    {
-                        iptEvent.Invoke();
-                    }
-
-                    foreach (UnityEvent iptEvent in ipt.TapEvents)
-                    {
-                        iptEvent.Invoke();
-                    }
-
-                    foreach (UnityEvent iptEvent in ipt.ReleaseEvents)
-                    {
-                        iptEvent.Invoke();
-                    }
+                    ipt.standardInputs.HoldEvents.Invoke();
+                    ipt.standardInputs.TapEvents.Invoke();
+                    ipt.standardInputs.ReleaseEvents.Invoke();
 
                     break;
                 }
@@ -111,20 +91,9 @@ public class InputManager : MonoBehaviour {
         {
             if (ipt.InputName == eventName)
             {
-                foreach (UnityEvent iptEvent in ipt.HoldEvents)
-                {
-                    iptEvent.Invoke();
-                }
-
-                foreach (UnityEvent iptEvent in ipt.TapEvents)
-                {
-                    iptEvent.Invoke();
-                }
-
-                foreach (UnityEvent iptEvent in ipt.ReleaseEvents)
-                {
-                    iptEvent.Invoke();
-                }
+                ipt.standardInputs.HoldEvents.Invoke();
+                ipt.standardInputs.HoldEvents.Invoke();
+                ipt.standardInputs.HoldEvents.Invoke();
 
                 return;
             }
@@ -133,26 +102,49 @@ public class InputManager : MonoBehaviour {
 }
 
 [System.Serializable]
-public class InputData{
-	
-	[Tooltip("A name so the list displays the name instead of 'Element #'")]
-	public string InputName;
+public class InputData
+{
 
-	[TextArea]
-	public string Description;
+    [Tooltip("A name so the list displays the name instead of 'Element #'")]
+    public string InputName;
 
-	[Tooltip("Select what keycodes to use for this input")]
-	public KeyCode Key1;
-	[Tooltip("Select what keycodes to use for this input")]
-	public KeyCode Key2;
+    [TextArea]
+    public string Description;
 
-	[Tooltip("Function Calls Are Done Here When Button Is Held")]
-	public UnityEvent[] HoldEvents;
+    public StandardInputs standardInputs;
 
-	[Tooltip("Function Calls Are Done Here When Button Is Pressed Once")]
-	public UnityEvent[] TapEvents;
+    public AxisInputs axisInputs;
 
-	[Tooltip("Function Calls Are Done Here When Button Is Released")]
-	public UnityEvent[] ReleaseEvents;
+}
 
+[System.Serializable]
+public class StandardInputs
+{
+    [Tooltip("Select what keycodes to use for this input")]
+    public KeyCode Key1;
+    [Tooltip("Select what keycodes to use for this input")]
+    public KeyCode Key2;
+
+    [Tooltip("Function Calls Are Done Here When Button Is Held")]
+    public UnityEvent HoldEvents;
+
+    [Tooltip("Function Calls Are Done Here When Button Is Pressed Once")]
+    public UnityEvent TapEvents;
+
+    [Tooltip("Function Calls Are Done Here When Button Is Released")]
+    public UnityEvent ReleaseEvents;
+}
+
+
+[System.Serializable]
+public class AxisInputs
+{
+    [Tooltip("Name of axis - Axis must be first setup in the Unity input system")]
+    public string axisName;
+
+    [Tooltip("Raw means no smoothing. -1, 0 and 1 only - Int")]
+    public bool isRaw;
+
+    [Tooltip("Function Calls Are Done Here When Axis Is Applied, NOTE - ARGUMENTS ARE IGNORED AS PER NATURE OF AXIS EVENTS")]
+    public UnityEvent AxisEvent;
 }
