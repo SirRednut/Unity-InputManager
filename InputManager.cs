@@ -8,17 +8,30 @@ using UnityEngine.Events;
 public class InputManager : MonoBehaviour
 {
 
-    [SerializeField]
-    [Tooltip("Disable this manager when cursor is enabled")]
-    private bool CursorLocked = false;
-    private bool canInput = true;
+
+    [Header("Input Safety Checks")]
 
     [SerializeField]
+    [Tooltip("Enabled: Inputs only occur when the Cursor's LockState is set to Locked." + "\n\n" + "Disabled: Inputs always occur no-matter the lock state of cursor")]
+    private bool PlayWithLockedCursorOnly = true;
+
+    [SerializeField]
+    [Tooltip("Enabled: Only ExternalEventCalls can occur - Useful for prefabs that only take commands from a network manager instead of the player" + "\n\n" + "Disabled: All Inputs Occur - Useful for the main player and game/ui controllers")]
+    private bool UseAsNetworkedInputsOnly = false;
+
+
+    private bool canInput = true;
+
+    [Space]
+    [Header("Inputs")]
+
+    [SerializeField]
+    [Tooltip("List of all Input settings")]
     private List<InputData> inputList;
 
     void Update()
     {
-        if (CursorLocked && Cursor.lockState != CursorLockMode.Locked)
+        if ((PlayWithLockedCursorOnly && Cursor.lockState != CursorLockMode.Locked) || UseAsNetworkedInputsOnly)
             canInput = false;
         else
             canInput = true;
@@ -92,8 +105,8 @@ public class InputManager : MonoBehaviour
             if (ipt.InputName == eventName)
             {
                 ipt.standardInputs.HoldEvents.Invoke();
-                ipt.standardInputs.HoldEvents.Invoke();
-                ipt.standardInputs.HoldEvents.Invoke();
+                ipt.standardInputs.TapEvents.Invoke();
+                ipt.standardInputs.ReleaseEvents.Invoke();
 
                 return;
             }
@@ -105,11 +118,15 @@ public class InputManager : MonoBehaviour
 public class InputData
 {
 
-    [Tooltip("A name so the list displays the name instead of 'Element #'")]
+    [Tooltip("Enter a unique name for the input for both list cleanliness and usage of ExternalEventCalls")]
     public string InputName;
 
     [TextArea]
     public string Description;
+
+
+    [Header("Remember: InputNames must be unique for ExternalEventCalls to work!")]
+    [Space]
 
     public StandardInputs standardInputs;
 
@@ -145,6 +162,6 @@ public class AxisInputs
     [Tooltip("Raw means no smoothing. -1, 0 and 1 only - Int")]
     public bool isRaw;
 
-    [Tooltip("Function Calls Are Done Here When Axis Is Applied, NOTE - ARGUMENTS ARE IGNORED AS PER NATURE OF AXIS EVENTS")]
+    [Tooltip("Function Calls Are Done Here When Axis Is Applied")]
     public UnityEvent AxisEvent;
 }
